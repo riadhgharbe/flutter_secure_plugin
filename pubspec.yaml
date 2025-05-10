@@ -1,0 +1,23 @@
+name: flutter_secure_plugin
+description: A Flutter plugin for secure encryption and decryption.
+version: 0.0.1
+
+environment:
+  sdk: ">=2.12.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.flutter_secure_plugin
+        pluginClass: FlutterSecurePlugin
+      ios:
+        pluginClass: SwiftFlutterSecurePlugin
