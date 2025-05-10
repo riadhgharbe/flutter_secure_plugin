@@ -53,7 +53,7 @@ public class SwiftFlutterSecurePlugin: NSObject, FlutterPlugin {
         let bufferSize = plainData.count + kCCBlockSizeAES128
         var buffer = [UInt8](repeating: 0, count: bufferSize)
         
-        // Perform encryption
+        // Perform encryption with PKCS7 padding
         let status = CCCrypt(CCOperation(kCCEncrypt),
                             CCAlgorithm(kCCAlgorithmAES),
                             CCOptions(kCCOptionPKCS7Padding),
@@ -87,7 +87,7 @@ public class SwiftFlutterSecurePlugin: NSObject, FlutterPlugin {
         let bufferSize = encryptedData.count + kCCBlockSizeAES128
         var buffer = [UInt8](repeating: 0, count: bufferSize)
         
-        // Perform decryption
+        // Perform decryption with PKCS7 padding
         let status = CCCrypt(CCOperation(kCCDecrypt),
                             CCAlgorithm(kCCAlgorithmAES),
                             CCOptions(kCCOptionPKCS7Padding),
