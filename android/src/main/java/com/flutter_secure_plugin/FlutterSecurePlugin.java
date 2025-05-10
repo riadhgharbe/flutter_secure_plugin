@@ -13,6 +13,7 @@ import java.util.Base64;
 
 public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
     private static final String USER_LABEL = "76D92340AB1FEC58";
+    private static final String IV = "1234567890abcdef"; // 16 bytes IV
     private MethodChannel channel;
 
     @Override
@@ -52,10 +53,13 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
 
             // Create key
             Key key = new SecretKeySpec(USER_LABEL.getBytes("UTF-8"), "AES");
-
-            // Encrypt
-            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            cipher.init(Cipher.ENCRYPT_MODE, key);
+            
+            // Create IV
+            IvParameterSpec ivSpec = new IvParameterSpec(IV.getBytes("UTF-8"));
+            
+            // Encrypt with CBC mode and PKCS5Padding
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
             byte[] encryptedBytes = cipher.doFinal(textBytes);
 
             // Convert to Base64 and replace '+' with 'plus'
@@ -77,10 +81,13 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
 
             // Create key
             Key key = new SecretKeySpec(USER_LABEL.getBytes("UTF-8"), "AES");
-
-            // Decrypt
-            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            cipher.init(Cipher.DECRYPT_MODE, key);
+            
+            // Create IV
+            IvParameterSpec ivSpec = new IvParameterSpec(IV.getBytes("UTF-8"));
+            
+            // Decrypt with CBC mode and PKCS5Padding
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
             byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
 
             // Convert to string and remove prefix character

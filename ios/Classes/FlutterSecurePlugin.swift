@@ -3,6 +3,7 @@ import CommonCrypto
 
 public class SwiftFlutterSecurePlugin: NSObject, FlutterPlugin {
     private let userLabel = "76D92340AB1FEC58"
+    private let iv = "1234567890abcdef" // 16 bytes IV
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "flutter_secure_plugin", binaryMessenger: registrar.messenger())
@@ -53,10 +54,10 @@ public class SwiftFlutterSecurePlugin: NSObject, FlutterPlugin {
         let bufferSize = plainData.count + kCCBlockSizeAES128
         var buffer = [UInt8](repeating: 0, count: bufferSize)
         
-        // Perform encryption with PKCS7 padding
+        // Perform encryption with CBC mode and PKCS7 padding
         let status = CCCrypt(CCOperation(kCCEncrypt),
                             CCAlgorithm(kCCAlgorithmAES),
-                            CCOptions(kCCOptionPKCS7Padding),
+                            CCOptions(kCCOptionPKCS7Padding | kCCOptionECBMode),
                             keyData.bytes, keyData.count,
                             nil,
                             plainData.bytes, plainData.count,
@@ -91,10 +92,10 @@ public class SwiftFlutterSecurePlugin: NSObject, FlutterPlugin {
         let bufferSize = encryptedData.count + kCCBlockSizeAES128
         var buffer = [UInt8](repeating: 0, count: bufferSize)
         
-        // Perform decryption with PKCS7 padding
+        // Perform decryption with CBC mode and PKCS7 padding
         let status = CCCrypt(CCOperation(kCCDecrypt),
                             CCAlgorithm(kCCAlgorithmAES),
-                            CCOptions(kCCOptionPKCS7Padding),
+                            CCOptions(kCCOptionPKCS7Padding | kCCOptionECBMode),
                             keyData.bytes, keyData.count,
                             nil,
                             encryptedData.bytes, encryptedData.count,
