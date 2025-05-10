@@ -47,11 +47,11 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
             // Add prefix character
             String modifiedText = "X" + plainText;
 
-            // Convert to ISO-8859-1 bytes
-            byte[] textBytes = modifiedText.getBytes("ISO-8859-1");
+            // Convert to UTF-8 bytes
+            byte[] textBytes = modifiedText.getBytes("UTF-8");
 
             // Create key
-            Key key = new SecretKeySpec(USER_LABEL.getBytes("ISO-8859-1"), "AES");
+            Key key = new SecretKeySpec(USER_LABEL.getBytes("UTF-8"), "AES");
 
             // Encrypt
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
@@ -84,7 +84,7 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
             byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
 
             // Convert to string and remove prefix character
-            String decryptedText = new String(decryptedBytes, "ISO-8859-1");
+            String decryptedText = new String(decryptedBytes, "UTF-8");
             return decryptedText.substring(1);
         } catch (Exception e) {
             e.printStackTrace();
