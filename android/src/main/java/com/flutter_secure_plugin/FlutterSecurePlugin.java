@@ -73,13 +73,17 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
     }
 
     private String decrypt(String encryptedValue) {
+        if (encryptedValue == null || encryptedValue.isEmpty()) {
+            throw new IllegalArgumentException("Encrypted value cannot be null or empty");
+        }
+
         try {
             // Replace 'plus' with '+'
             String modifiedValue = encryptedValue.replace("plus", "+");
-
+            
             // Convert from Base64
             byte[] encryptedBytes = Base64.getDecoder().decode(modifiedValue);
-
+            
             // Create key
             Key key = new SecretKeySpec(USER_LABEL.getBytes("UTF-8"), "AES");
             
@@ -93,10 +97,15 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
 
             // Convert to string and remove prefix character
             String decryptedText = new String(decryptedBytes, "UTF-8");
+            
+            // Validate the decrypted text starts with 'X'
+            if (decryptedText == null || !decryptedText.startsWith("X")) {
+                throw new SecurityException("Invalid decryption result");
+            }
+            
             return decryptedText.substring(1);
         } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+            throw new SecurityException("Decryption failed: " + e.getMessage(), e);
         }
     }
 }
