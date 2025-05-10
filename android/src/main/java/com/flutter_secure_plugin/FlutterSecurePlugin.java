@@ -46,21 +46,21 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
         try {
             // Add prefix character
             String modifiedText = "X" + plainText;
-            
+
             // Convert to UTF-8 bytes
             byte[] textBytes = modifiedText.getBytes("UTF-8");
-            
+
             // Create key
             Key key = new SecretKeySpec(USER_LABEL.getBytes("UTF-8"), "AES");
-            
+
             // Encrypt
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             cipher.init(Cipher.ENCRYPT_MODE, key);
             byte[] encryptedBytes = cipher.doFinal(textBytes);
-            
-            // Convert to Base64
+
+            // Convert to Base64 and replace '+' with 'plus'
             String base64String = Base64.getEncoder().encodeToString(encryptedBytes);
-            return base64String;
+            return base64String.replace("+", "plus");
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -69,17 +69,20 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
 
     private String decrypt(String encryptedValue) {
         try {
+            // Replace 'plus' with '+'
+            String modifiedValue = encryptedValue.replace("plus", "+");
+
             // Convert from Base64
             byte[] encryptedBytes = Base64.getDecoder().decode(modifiedValue);
-            
+
             // Create key
             Key key = new SecretKeySpec(USER_LABEL.getBytes("UTF-8"), "AES");
-            
+
             // Decrypt
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             cipher.init(Cipher.DECRYPT_MODE, key);
             byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
-            
+
             // Convert to string and remove prefix character
             String decryptedText = new String(decryptedBytes, "UTF-8");
             return decryptedText.substring(1);
