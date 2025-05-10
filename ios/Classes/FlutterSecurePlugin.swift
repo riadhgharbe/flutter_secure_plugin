@@ -67,16 +67,12 @@ public class SwiftFlutterSecurePlugin: NSObject, FlutterPlugin {
             return nil
         }
         
-        // Convert to Base64 and replace '+' with 'plus'
+        // Convert to Base64
         let encryptedData = Data(buffer[0..<Int(buffer.count)])
-        let base64String = encryptedData.base64EncodedString()
-        return base64String.replacingOccurrences(of: "+", with: "plus")
+        return encryptedData.base64EncodedString()
     }
 
     private func decrypt(_ encryptedValue: String) -> String? {
-        // Replace 'plus' with '+'
-        let modifiedValue = encryptedValue.replacingOccurrences(of: "plus", with: "+")
-        
         // Base64 decode
         guard let encryptedData = Data(base64Encoded: modifiedValue) else {
             return nil

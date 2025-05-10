@@ -58,9 +58,9 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
             cipher.init(Cipher.ENCRYPT_MODE, key);
             byte[] encryptedBytes = cipher.doFinal(textBytes);
             
-            // Convert to Base64 and replace '+' with 'plus'
+            // Convert to Base64
             String base64String = Base64.getEncoder().encodeToString(encryptedBytes);
-            return base64String.replace("+", "plus");
+            return base64String;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -69,9 +69,6 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
 
     private String decrypt(String encryptedValue) {
         try {
-            // Replace 'plus' with '+'
-            String modifiedValue = encryptedValue.replace("plus", "+");
-            
             // Convert from Base64
             byte[] encryptedBytes = Base64.getDecoder().decode(modifiedValue);
             
