@@ -3,8 +3,7 @@ import CommonCrypto
 
 public class SwiftFlutterSecurePlugin: NSObject, FlutterPlugin {
     private let userLabel = "76D92340AB1FEC58"
-    private let iv = "1234567890abcdef" // 16 bytes IV
-    
+
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "flutter_secure_plugin", binaryMessenger: registrar.messenger())
         let instance = SwiftFlutterSecurePlugin()
@@ -39,63 +38,59 @@ public class SwiftFlutterSecurePlugin: NSObject, FlutterPlugin {
     private func encrypt(_ plainText: String) -> String? {
         // Add prefix character
         let modifiedPlainText = "X" + plainText
-        
+
         // Convert to data using UTF-8
         guard let plainData = modifiedPlainText.data(using: .utf8) else {
             return nil
         }
-        
+
         // Get key data using UTF-8
         guard let keyData = userLabel.data(using: .utf8), keyData.count == 16 else {
             return nil
         }
-        
+
         // Create buffer for encrypted data
         let bufferSize = plainData.count + kCCBlockSizeAES128
         var buffer = [UInt8](repeating: 0, count: bufferSize)
-        
-        // Perform encryption with CBC mode and PKCS7 padding
+
+        // Perform encryption
         let status = CCCrypt(CCOperation(kCCEncrypt),
                             CCAlgorithm(kCCAlgorithmAES),
-                            CCOptions(kCCOptionPKCS7Padding | kCCOptionECBMode),
+                            CCOptions(kCCOptionPKCS7Padding),
                             keyData.bytes, keyData.count,
                             nil,
                             plainData.bytes, plainData.count,
                             &buffer, buffer.count,
                             nil)
-        
+
         if status != CCCryptorStatus(kCCSuccess) {
             return nil
         }
-        
-        // Convert to Base64 and replace '+' with 'plus'
+
+        // Convert to Base64
         let encryptedData = Data(buffer[0..<Int(buffer.count)])
-        let base64String = encryptedData.base64EncodedString()
-        return base64String.replacingOccurrences(of: "+", with: "plus")
+        return encryptedData.base64EncodedString()
     }
 
     private func decrypt(_ encryptedValue: String) -> String? {
-        // Replace 'plus' with '+'
-        let modifiedValue = encryptedValue.replacingOccurrences(of: "plus", with: "+")
-
         // Base64 decode
         guard let encryptedData = Data(base64Encoded: modifiedValue) else {
             return nil
         }
-        
+
         // Get key data using UTF-8
         guard let keyData = userLabel.data(using: .utf8), keyData.count == 16 else {
             return nil
         }
-        
+
         // Create buffer for decrypted data
         let bufferSize = encryptedData.count + kCCBlockSizeAES128
         var buffer = [UInt8](repeating: 0, count: bufferSize)
-        
-        // Perform decryption with CBC mode and PKCS7 padding
+
+        // Perform decryption
         let status = CCCrypt(CCOperation(kCCDecrypt),
                             CCAlgorithm(kCCAlgorithmAES),
-                            CCOptions(kCCOptionPKCS7Padding | kCCOptionECBMode),
+                            CCOptions(kCCOptionPKCS7Padding),
                             keyData.bytes, keyData.count,
                             nil,
                             encryptedData.bytes, encryptedData.count,

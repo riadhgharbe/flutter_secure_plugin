@@ -10,11 +10,9 @@ import java.security.Key;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
-import javax.crypto.spec.IvParameterSpec;
 
 public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
     private static final String USER_LABEL = "76D92340AB1FEC58";
-    private static final String IV = "1234567890abcdef"; // 16 bytes IV
     private MethodChannel channel;
 
     @Override
@@ -54,18 +52,15 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
 
             // Create key
             Key key = new SecretKeySpec(USER_LABEL.getBytes("UTF-8"), "AES");
-            
-            // Create IV
-            IvParameterSpec ivSpec = new IvParameterSpec(IV.getBytes("UTF-8"));
-            
-            // Encrypt with CBC mode and PKCS5Padding
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
+
+            // Encrypt
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, key);
             byte[] encryptedBytes = cipher.doFinal(textBytes);
 
-            // Convert to Base64 and replace '+' with 'plus'
+            // Convert to Base64
             String base64String = Base64.getEncoder().encodeToString(encryptedBytes);
-            return base64String.replace("+", "plus");
+            return base64String;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -73,39 +68,24 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
     }
 
     private String decrypt(String encryptedValue) {
-        if (encryptedValue == null || encryptedValue.isEmpty()) {
-            throw new IllegalArgumentException("Encrypted value cannot be null or empty");
-        }
-
         try {
-            // Replace 'plus' with '+'
-            String modifiedValue = encryptedValue.replace("plus", "+");
-            
             // Convert from Base64
             byte[] encryptedBytes = Base64.getDecoder().decode(modifiedValue);
-            
+
             // Create key
             Key key = new SecretKeySpec(USER_LABEL.getBytes("UTF-8"), "AES");
-            
-            // Create IV
-            IvParameterSpec ivSpec = new IvParameterSpec(IV.getBytes("UTF-8"));
-            
-            // Decrypt with CBC mode and PKCS5Padding
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
+
+            // Decrypt
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, key);
             byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
 
             // Convert to string and remove prefix character
             String decryptedText = new String(decryptedBytes, "UTF-8");
-            
-            // Validate the decrypted text starts with 'X'
-            if (decryptedText == null || !decryptedText.startsWith("X")) {
-                throw new SecurityException("Invalid decryption result");
-            }
-            
             return decryptedText.substring(1);
         } catch (Exception e) {
-            throw new SecurityException("Decryption failed: " + e.getMessage(), e);
+            e.printStackTrace();
+            return null;
         }
     }
 }
