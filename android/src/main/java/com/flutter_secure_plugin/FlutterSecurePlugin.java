@@ -10,6 +10,7 @@ import java.security.Key;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
+import javax.crypto.spec.IvParameterSpec;
 
 public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
     private static final String USER_LABEL = "76D92340AB1FEC58";
