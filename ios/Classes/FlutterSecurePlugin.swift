@@ -39,13 +39,13 @@ public class SwiftFlutterSecurePlugin: NSObject, FlutterPlugin {
         // Add prefix character
         let modifiedPlainText = "X" + plainText
         
-        // Convert to data
-        guard let plainData = modifiedPlainText.data(using: .isoLatin1) else {
+        // Convert to data using UTF-8
+        guard let plainData = modifiedPlainText.data(using: .utf8) else {
             return nil
         }
         
-        // Get key data
-        guard let keyData = userLabel.data(using: .isoLatin1), keyData.count == 16 else {
+        // Get key data using UTF-8
+        guard let keyData = userLabel.data(using: .utf8), keyData.count == 16 else {
             return nil
         }
         
@@ -82,8 +82,8 @@ public class SwiftFlutterSecurePlugin: NSObject, FlutterPlugin {
             return nil
         }
         
-        // Get key data
-        guard let keyData = userLabel.data(using: .isoLatin1), keyData.count == 16 else {
+        // Get key data using UTF-8
+        guard let keyData = userLabel.data(using: .utf8), keyData.count == 16 else {
             return nil
         }
         
@@ -105,13 +105,11 @@ public class SwiftFlutterSecurePlugin: NSObject, FlutterPlugin {
             return nil
         }
         
-        // Convert to string and remove prefix character
-        let decryptedData = Data(buffer[0..<Int(buffer.count)])
-        guard let decryptedString = String(data: decryptedData, encoding: .isoLatin1),
-              decryptedString.count > 0 else {
+        // Convert to string using UTF-8 and remove prefix character
+        guard let decryptedData = Data(buffer[0..<Int(buffer.count)]),
+              let decryptedString = String(data: decryptedData, encoding: .utf8) else {
             return nil
         }
-        
         return String(decryptedString.dropFirst())
     }
 }
