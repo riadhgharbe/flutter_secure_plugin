@@ -1,0 +1,2 @@
+include ':flutter_secure_plugin'
+rootProject.name = 'flutter_secure_plugin'
