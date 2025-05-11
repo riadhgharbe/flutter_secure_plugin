@@ -36,6 +36,17 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
                 String encryptedValue = call.argument("encryptedValue");
                 result.success(decrypt(encryptedValue));
                 break;
+            case "encryptWithPKI":
+                // For encryptWithPKI, we can reuse the encryptarabic method
+                // since it's based on the same implementation
+                String pkiText = call.argument("plainText");
+                result.success(encryptarabic(pkiText));
+                break;
+            case "decryptWithPKI":
+                // For decryptWithPKI, we can reuse the decrypt method
+                String pkiEncryptedValue = call.argument("encryptedValue");
+                result.success(decrypt(pkiEncryptedValue));
+                break;
             default:
                 result.notImplemented();
         }

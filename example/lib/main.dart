@@ -34,6 +34,38 @@ class MyApp extends StatelessWidget {
                 },
                 child: const Text('Test Decryption'),
               ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () async {
+                  // Test the new PKI encryption and decryption methods
+                  final plainText = "Hello, PKI encryption!";
+
+                  print("Original text: $plainText");
+
+                  // Encrypt using the new encryptWithPKI method
+                  String? encrypted =
+                      await FlutterSecurePlugin.encryptWithPKI(plainText);
+
+                  print("Encrypted with PKI: $encrypted");
+
+                  // Decrypt using the new decryptWithPKI method
+                  String? decrypted =
+                      await FlutterSecurePlugin.decryptWithPKI(encrypted!);
+
+                  print("Decrypted with PKI: $decrypted");
+
+                  // Verify that decryption succeeded and matches the original text
+                  if (plainText == decrypted) {
+                    print("SUCCESS: Decrypted value matches original text");
+                  } else {
+                    print(
+                        "FAILURE: Decrypted value does not match original text");
+                    print("Original: $plainText");
+                    print("Decrypted: $decrypted");
+                  }
+                },
+                child: const Text('Test PKI Encryption/Decryption'),
+              ),
             ],
           ),
         ),

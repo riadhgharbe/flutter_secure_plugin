@@ -39,6 +39,27 @@ public class SwiftFlutterSecurePlugin: NSObject, FlutterPlugin {
                 return
             }
             result(decrypt(encryptedValue))
+        case "encryptWithPKI":
+            // For encryptWithPKI, we can reuse the encryptarabic method
+            // since it's based on the same implementation
+            guard let args = call.arguments as? [String: Any],
+                  let plainText = args["plainText"] as? String else {
+                result(FlutterError(code: "INVALID_ARGUMENTS",
+                                  message: "Invalid arguments provided",
+                                  details: nil))
+                return
+            }
+            result(encryptarabic(plainText))
+        case "decryptWithPKI":
+            // For decryptWithPKI, we can reuse the decrypt method
+            guard let args = call.arguments as? [String: Any],
+                  let encryptedValue = args["encryptedValue"] as? String else {
+                result(FlutterError(code: "INVALID_ARGUMENTS",
+                                  message: "Invalid arguments provided",
+                                  details: nil))
+                return
+            }
+            result(decrypt(encryptedValue))
         default:
             result(FlutterMethodNotImplemented)
         }
