@@ -17,6 +17,20 @@ class FlutterSecurePlugin {
     }
   }
 
+  static Future<String?> encryptarabic(String plainText) async {
+    try {
+      final result =
+          await _channel.invokeMethod('encryptarabic', {'plainText': plainText});
+      return result as String?;
+    } on PlatformException catch (e) {
+      print('Error encrypting Arabic text: ${e.message}');
+      return null;
+    } catch (e) {
+      print('Unexpected error: $e');
+      return null;
+    }
+  }
+
   static Future<String?> decrypt(String encryptedValue) async {
     try {
       final result = await _channel

@@ -21,6 +21,15 @@ public class SwiftFlutterSecurePlugin: NSObject, FlutterPlugin {
                 return
             }
             result(encrypt(plainText))
+        case "encryptarabic":
+            guard let args = call.arguments as? [String: Any],
+                  let plainText = args["plainText"] as? String else {
+                result(FlutterError(code: "INVALID_ARGUMENTS",
+                                  message: "Invalid arguments provided",
+                                  details: nil))
+                return
+            }
+            result(encryptarabic(plainText))
         case "decrypt":
             guard let args = call.arguments as? [String: Any],
                   let encryptedValue = args["encryptedValue"] as? String else {
@@ -69,6 +78,47 @@ public class SwiftFlutterSecurePlugin: NSObject, FlutterPlugin {
 
         // Convert to Base64 and replace '+' with 'plus'
         let encryptedData = Data(buffer[0..<Int(buffer.count)])
+        let base64String = encryptedData.base64EncodedString()
+        return base64String.replacingOccurrences(of: "+", with: "plus")
+    }
+
+    private func encryptarabic(_ plainText: String) -> String? {
+        // Add a random Arabic character as prefix (ا to ي)
+        // Unicode range for Arabic letters: 0x0627 (ا) to 0x064A (ي)
+        let arabicCharCode = Int.random(in: 0x0627...0x064A)
+        let arabicChar = UnicodeScalar(arabicCharCode)!
+        let modifiedPlainText = String(arabicChar) + plainText
+
+        // Convert to data using UTF-8
+        guard let plainData = modifiedPlainText.data(using: .utf8) else {
+            return nil
+        }
+
+        // Get key data using UTF-8
+        guard let keyData = userLabel.data(using: .utf8), keyData.count == 16 else {
+            return nil
+        }
+
+        // Create buffer for encrypted data
+        let bufferSize = plainData.count + kCCBlockSizeAES128
+        var buffer = [UInt8](repeating: 0, count: bufferSize)
+
+        // Perform encryption
+        let status = CCCrypt(CCOperation(kCCEncrypt),
+                            CCAlgorithm(kCCAlgorithmAES),
+                            CCOptions(kCCOptionPKCS7Padding),
+                            keyData.bytes, keyData.count,
+                            nil,
+                            plainData.bytes, plainData.count,
+                            &buffer, buffer.count,
+                            nil)
+
+        if status != CCCryptorStatus(kCCSuccess) {
+            return nil
+        }
+
+        // Convert to Base64 and replace '+' with 'plus'
+        let encryptedData = Data(buffer.prefix(while: { $0 != 0 }))
         let base64String = encryptedData.base64EncodedString()
         return base64String.replacingOccurrences(of: "+", with: "plus")
     }

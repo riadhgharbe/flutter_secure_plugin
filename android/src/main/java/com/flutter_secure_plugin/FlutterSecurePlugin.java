@@ -28,6 +28,10 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
                 String plainText = call.argument("plainText");
                 result.success(encrypt(plainText));
                 break;
+            case "encryptarabic":
+                String arabicText = call.argument("plainText");
+                result.success(encryptarabic(arabicText));
+                break;
             case "decrypt":
                 String encryptedValue = call.argument("encryptedValue");
                 result.success(decrypt(encryptedValue));
@@ -51,7 +55,15 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
             byte[] textBytes = modifiedText.getBytes("UTF-8");
 
             // Create key
-            Key key = new SecretKeySpec(USER_LABEL.getBytes("UTF-8"), "AES");
+            // Ensure key is exactly 16 bytes (128 bits) for AES-128
+            byte[] keyBytes = USER_LABEL.getBytes("UTF-8");
+            if (keyBytes.length != 16) {
+                // If key is not 16 bytes, use first 16 bytes or pad with zeros
+                byte[] adjustedKey = new byte[16];
+                System.arraycopy(keyBytes, 0, adjustedKey, 0, Math.min(keyBytes.length, 16));
+                keyBytes = adjustedKey;
+            }
+            Key key = new SecretKeySpec(keyBytes, "AES");
 
             // Encrypt
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
@@ -67,6 +79,41 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
         }
     }
 
+    private String encryptarabic(String plainText) {
+        try {
+            // Add a random Arabic character as prefix (ا to ي)
+            // Unicode range for Arabic letters: 0x0627 (ا) to 0x064A (ي)
+            char arabicChar = (char) (0x0627 + (int) (Math.random() * (0x064A - 0x0627 + 1)));
+            String modifiedText = arabicChar + plainText;
+
+            // Convert to UTF-8 bytes
+            byte[] textBytes = modifiedText.getBytes("UTF-8");
+
+            // Create key
+            // Ensure key is exactly 16 bytes (128 bits) for AES-128
+            byte[] keyBytes = USER_LABEL.getBytes("UTF-8");
+            if (keyBytes.length != 16) {
+                // If key is not 16 bytes, use first 16 bytes or pad with zeros
+                byte[] adjustedKey = new byte[16];
+                System.arraycopy(keyBytes, 0, adjustedKey, 0, Math.min(keyBytes.length, 16));
+                keyBytes = adjustedKey;
+            }
+            Key key = new SecretKeySpec(keyBytes, "AES");
+
+            // Encrypt
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, key);
+            byte[] encryptedBytes = cipher.doFinal(textBytes);
+
+            // Convert to Base64 and replace '+' with 'plus'
+            String base64String = Base64.getEncoder().encodeToString(encryptedBytes);
+            return base64String.replace("+", "plus");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return plainText;
+        }
+    }
+
     private String decrypt(String encryptedValue) {
         try {
             // Replace 'plus' with '+'
@@ -76,7 +123,15 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
             byte[] encryptedBytes = Base64.getDecoder().decode(modifiedValue);
 
             // Create key
-            Key key = new SecretKeySpec(USER_LABEL.getBytes("UTF-8"), "AES");
+            // Ensure key is exactly 16 bytes (128 bits) for AES-128
+            byte[] keyBytes = USER_LABEL.getBytes("UTF-8");
+            if (keyBytes.length != 16) {
+                // If key is not 16 bytes, use first 16 bytes or pad with zeros
+                byte[] adjustedKey = new byte[16];
+                System.arraycopy(keyBytes, 0, adjustedKey, 0, Math.min(keyBytes.length, 16));
+                keyBytes = adjustedKey;
+            }
+            Key key = new SecretKeySpec(keyBytes, "AES");
 
             // Decrypt
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
@@ -85,7 +140,11 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
 
             // Convert to string and remove prefix character
             String decryptedText = new String(decryptedBytes, "UTF-8");
-            return decryptedText.substring(1);
+            if (decryptedText.length() > 0) {
+                return decryptedText.substring(1);
+            } else {
+                return "";
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return null;
