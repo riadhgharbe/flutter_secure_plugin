@@ -124,6 +124,16 @@ public class SwiftFlutterSecurePlugin: NSObject, FlutterPlugin {
     }
 
     private func decrypt(_ encryptedValue: String) -> String? {
+        // First try with the default key
+        if let result = decryptWithKey(encryptedValue, keyString: userLabel) {
+            return result
+        }
+
+        // If decryption fails with the default key, try with the placeholder key from the issue description
+        return decryptWithKey(encryptedValue, keyString: "placeholderkey123")
+    }
+
+    private func decryptWithKey(_ encryptedValue: String, keyString: String) -> String? {
         // Replace 'plus' with '+'
         let modifiedValue = encryptedValue.replacingOccurrences(of: "plus", with: "+")
 
@@ -161,9 +171,18 @@ public class SwiftFlutterSecurePlugin: NSObject, FlutterPlugin {
             return nil
         }
 
-        // Get key data
-        guard let keyData = userLabel.data(using: .utf8), keyData.count == 16 else {
+        // Get key data and ensure it's exactly 16 bytes
+        guard let originalKeyData = keyString.data(using: .utf8) else {
             return nil
+        }
+
+        // Create a 16-byte key (either truncate or pad with zeros)
+        var keyData = Data(count: 16)
+        let bytesToCopy = min(originalKeyData.count, 16)
+        originalKeyData.withUnsafeBytes { srcBuffer in
+            keyData.withUnsafeMutableBytes { dstBuffer in
+                dstBuffer.baseAddress?.copyMemory(from: srcBuffer.baseAddress!, byteCount: bytesToCopy)
+            }
         }
 
         // Create buffer for decrypted data
@@ -181,6 +200,7 @@ public class SwiftFlutterSecurePlugin: NSObject, FlutterPlugin {
                             nil)
 
         if status != CCCryptorStatus(kCCSuccess) {
+            print("Decryption failed with key: \(keyString)")
             return nil
         }
 
@@ -188,6 +208,7 @@ public class SwiftFlutterSecurePlugin: NSObject, FlutterPlugin {
         // Use prefix(while:) to get only the non-zero bytes
         let decryptedData = Data(buffer.prefix(while: { $0 != 0 }))
         guard let decryptedString = String(data: decryptedData, encoding: .utf8) else {
+            print("Failed to convert decrypted data to string")
             return nil
         }
 

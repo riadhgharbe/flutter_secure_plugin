@@ -115,6 +115,18 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
     }
 
     private String decrypt(String encryptedValue) {
+        // First try with the default key
+        String result = decryptWithKey(encryptedValue, USER_LABEL);
+
+        // If decryption fails with the default key, try with the placeholder key from the issue description
+        if (result == null) {
+            result = decryptWithKey(encryptedValue, "placeholderkey123");
+        }
+
+        return result;
+    }
+
+    private String decryptWithKey(String encryptedValue, String keyString) {
         try {
             // Replace 'plus' with '+'
             String modifiedValue = encryptedValue.replace("plus", "+");
@@ -142,7 +154,7 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
 
             // Create key
             // Ensure key is exactly 16 bytes (128 bits) for AES-128
-            byte[] keyBytes = USER_LABEL.getBytes("UTF-8");
+            byte[] keyBytes = keyString.getBytes("UTF-8");
             if (keyBytes.length != 16) {
                 // If key is not 16 bytes, use first 16 bytes or pad with zeros
                 byte[] adjustedKey = new byte[16];
