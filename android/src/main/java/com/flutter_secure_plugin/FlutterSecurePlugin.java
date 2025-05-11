@@ -76,7 +76,7 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
             byte[] encryptedBytes = Base64.getDecoder().decode(modifiedValue);
 
             // Create key
-            Key key = new SecretKeySpec(USER_LABEL.getBytes("ISO-8859-1"), "AES");
+            Key key = new SecretKeySpec(USER_LABEL.getBytes("UTF-8"), "AES");
 
             // Decrypt
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");

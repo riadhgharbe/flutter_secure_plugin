@@ -83,7 +83,7 @@ public class SwiftFlutterSecurePlugin: NSObject, FlutterPlugin {
         }
 
         // Get key data
-        guard let keyData = userLabel.data(using: .isoLatin1), keyData.count == 16 else {
+        guard let keyData = userLabel.data(using: .utf8), keyData.count == 16 else {
             return nil
         }
 
