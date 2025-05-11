@@ -119,8 +119,26 @@ public class FlutterSecurePlugin implements FlutterPlugin, MethodCallHandler {
             // Replace 'plus' with '+'
             String modifiedValue = encryptedValue.replace("plus", "+");
 
-            // Convert from Base64
-            byte[] encryptedBytes = Base64.getDecoder().decode(modifiedValue);
+            byte[] encryptedBytes;
+            try {
+                // First try standard Base64 decoding
+                encryptedBytes = Base64.getDecoder().decode(modifiedValue);
+            } catch (Exception e) {
+                try {
+                    // If standard decoding fails, try URL-safe Base64 decoding
+                    encryptedBytes = Base64.getUrlDecoder().decode(modifiedValue);
+                } catch (Exception e2) {
+                    // If both fail, try with Apache Commons Codec style decoding
+                    // This is a fallback for compatibility with the encryptarabic function in the issue description
+                    // which uses Apache Commons Codec's Base64.encodeBase64()
+                    String paddedValue = modifiedValue;
+                    // Add padding if needed
+                    while (paddedValue.length() % 4 != 0) {
+                        paddedValue += "=";
+                    }
+                    encryptedBytes = Base64.getDecoder().decode(paddedValue);
+                }
+            }
 
             // Create key
             // Ensure key is exactly 16 bytes (128 bits) for AES-128

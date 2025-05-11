@@ -127,8 +127,37 @@ public class SwiftFlutterSecurePlugin: NSObject, FlutterPlugin {
         // Replace 'plus' with '+'
         let modifiedValue = encryptedValue.replacingOccurrences(of: "plus", with: "+")
 
-        // Base64 decode
-        guard let encryptedData = Data(base64Encoded: modifiedValue) else {
+        // Try different Base64 decoding approaches
+        var encryptedData: Data?
+
+        // 1. Try standard Base64 decoding
+        if let data = Data(base64Encoded: modifiedValue) {
+            encryptedData = data
+            print("Standard Base64 decoding succeeded")
+        } 
+        // 2. Try URL-safe Base64 decoding (replace - with + and _ with /)
+        else if let data = Data(base64Encoded: modifiedValue
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")) {
+            encryptedData = data
+            print("URL-safe Base64 decoding succeeded")
+        }
+        // 3. Try adding padding if needed
+        else {
+            var paddedValue = modifiedValue
+            // Add padding if needed
+            while paddedValue.count % 4 != 0 {
+                paddedValue += "="
+            }
+            if let data = Data(base64Encoded: paddedValue) {
+                encryptedData = data
+                print("Padded Base64 decoding succeeded")
+            }
+        }
+
+        // If all decoding attempts failed, return nil
+        guard let encryptedData = encryptedData else {
+            print("All Base64 decoding attempts failed")
             return nil
         }
 
@@ -156,8 +185,9 @@ public class SwiftFlutterSecurePlugin: NSObject, FlutterPlugin {
         }
 
         // Convert decrypted data to string using UTF-8
-        guard let decryptedData = Data(buffer[0..<Int(buffer.count)]),
-              let decryptedString = String(data: decryptedData, encoding: .utf8) else {
+        // Use prefix(while:) to get only the non-zero bytes
+        let decryptedData = Data(buffer.prefix(while: { $0 != 0 }))
+        guard let decryptedString = String(data: decryptedData, encoding: .utf8) else {
             return nil
         }
 
